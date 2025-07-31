@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -14,9 +15,10 @@ class AuthController extends Controller
             'last_name' => 'required|string|max:255',
             'address' => 'required|string|max:255',
             'phone' => 'required|string|max:11',
-            'email' => 'required|email|unique:users,data->email|max:30,',
+            'email' => 'required|email|max:30|unique:users,data->email',
             'password' => 'required|string|min:3',
         ]);
+        $validated['password'] = Hash::make($validated['password']);
 
         $user = User::create([
             'data' => $validated,
@@ -28,29 +30,36 @@ class AuthController extends Controller
         $token = $user->createToken('Auth-token')->plainTextToken;
             return response()->json([
                 'message' => 'Registered Successfully',
-                'user' => $user,
                 'token' => $token
             ], 200);
 
     }
 
-    public function login(Request $request){
-        $user = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string'
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+        'email' => 'required|email',
+        'password' => 'required|string'
         ]);
 
-        $user = User::where('data->email', $request->email)->first();
-        if(!$user || !Auth::check(['data->email' => $request->email, 'data->password' => $request['password']]))
-            return response()->json([
-                'message' => 'Invalid Credentials'
-            ], 401);
+        // Find user by email in JSON data
+        $user = User::where('data->email', $credentials['email'])->first();
 
-            $token = $user->createToken('auth-Token')->plainTextToken;
+        // Proper Hash::check() usage
+        if(!$user){
+            return response()->json(['message' => 'Invalid Credential'], 401);
+        }
+        if (!Hash::check($credentials['password'], $user->data['password'])) {
             return response()->json([
-                'message' => 'Login Successful',
-                'user' => $user,
-                'token' => $token
-            ]);
+            'message' => 'Invalid Credentials'
+            ], 401);
+        }
+
+        $token = $user->createToken('auth-Token')->plainTextToken;
+        return response()->json([
+        'message' => 'Login Successful',
+        'user' => $user,
+        'token' => $token
+        ]);
     }
 }

@@ -28,7 +28,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $hidden = [
-        'password',
+        'data->password',
         'remember_token',
     ];
 
@@ -42,7 +42,7 @@ class User extends Authenticatable
     'data' => 'array',
     'created_at' => 'datetime',
     ];
-    
+
     protected function casts(): array
     {
         return [
