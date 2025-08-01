@@ -62,4 +62,10 @@ class AuthController extends Controller
         'token' => $token
         ]);
     }
+
+    public function update(Request $request) {
+        $request->validate([
+            ''
+        ])
+    }
 }
