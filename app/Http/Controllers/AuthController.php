@@ -65,7 +65,9 @@ class AuthController extends Controller
 
     public function update(Request $request) {
         $request->validate([
-            ''
-        ])
+            'first_name',
+        ]);
+
+        db::update('first_name', $request->first_name);
     }
 }
